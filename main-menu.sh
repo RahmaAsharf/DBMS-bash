@@ -12,7 +12,7 @@ case $REPLY in
         ;;
 	2) echo "Listing DBs"
 	;;
-	3) echo "Connecting to DB"
+	3) ./connect-DB.sh
         ;;
 	4) echo "Dropping DB"
         ;;
