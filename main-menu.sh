@@ -4,7 +4,11 @@
 main(){
 	PS3="Please enter number of your choice: "
 
-options=("Create Database" "List Database" "Connect to Database" "Drop Database")
+options=("Create Database" "List Database" "Connect to Database" "Drop Database" "Exit")
+
+ echo "------------------------------------"
+ echo "          Main Menu"
+ echo "------------------------------------"
 
 
 select option in "${options[@]}"
@@ -15,12 +19,17 @@ case $REPLY in
 	   main
         ;;
 	2) echo "Listing DBs"
+       listDatabases
+       main
 	;;
 	3) ./connect-DB.sh
         ;;
 	4) echo "Dropping DB"
         ;;
-	*) echo "Invalid option.. Please enter a choice from 1 to 4"
+    5) echo "Exiting..."
+        exit 0
+        ;; 
+	*) echo "Invalid option.. Please enter a choice from 1 to 5"
         ;;
 esac
 done
@@ -65,7 +74,22 @@ createDB() {
 }
 
 listDatabases() {
-    ls ./databases
+    if [ ! -d "./databases" ]
+    then
+        echo "No databases found."
+        echo "------------------------------------"
+    else
+        echo "List of Databases:"
+        echo "------------------------------------"
+
+        # redirecting stderr to /dev/null to suppress the error message
+        for dbDir in "./databases"/*/
+        do
+            echo "$(basename "$dbDir")"
+        done 2>/dev/null
+        echo "------------------------------------"
+    fi
 }
+
 
 main
