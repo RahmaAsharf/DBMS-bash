@@ -22,7 +22,9 @@ case $REPLY in
        listDatabases
        main
 	;;
-	3) ./connect-DB.sh
+	3)  . ./connect-DB.sh
+        #echo "done"
+        break
         ;;
 	4) echo "Dropping DB"
         ;;
