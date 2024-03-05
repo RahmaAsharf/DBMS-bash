@@ -10,7 +10,6 @@ options=("Create Database" "List Database" "Connect to Database" "Drop Database"
  echo "          Main Menu"
  echo "------------------------------------"
 
-
 select option in "${options[@]}"
 do
 case $REPLY in
@@ -21,12 +20,12 @@ case $REPLY in
 	2) echo "Listing DBs"
        listDatabases
        main
-	;;
-	3)  . ./connect-DB.sh
-        #echo "done"
-        break
+	    ;;
+	3) 
+        connectDb
         ;;
 	4) echo "Dropping DB"
+        dropDb
         ;;
     5) echo "Exiting..."
         exit 0
@@ -93,5 +92,66 @@ listDatabases() {
     fi
 }
 
+function connectDb()
+{
+    listDatabases
+    echo "--------------------------------------------------------"
+    read -p "Please enter the name of DB you want to connect: " connectdb
+
+    #----------------- check if the db is excisted--------------------
+    if [ -d "./databases/$connectdb" ]
+    then
+        cd "./databases/$connectdb"
+        echo $PWD
+        source "../../tables.sh"
+
+    else
+        read -p "You don't have a DB with this name choose excisted one or [q] to quit : " op
+        quit $op
+        connectDb
+    fi
+
+}
+
+function dropDb()
+{
+    listDatabases
+    read -p "Please enter the name of DB you want to drop: " connectdb
+
+    #----------------- check if the db is existed--------------------
+    if [ -d "./databases/$connectdb" ]; then
+        while true; do
+            read -p "Are you sure you want to delete $connectdb permanently? [y]/[q] to quit : " -n 1 yes
+            case $yes in
+                [yY])
+                    rm -r "./databases/$connectdb"
+                    echo " "
+                    echo "$connectdb is deleted successfully"
+                    ./main-menu.sh
+                    ;;
+                [qQ])
+                    quit $yes
+                    ;;
+                *)
+                    echo " "
+                    echo "Invalid choice. Please enter 'y' or 'q'."
+                    ;;
+            esac
+        done
+    else
+        #---------------------------need to handle here
+        echo "You don't have a DB with this name. Choose an existing one or [q] to quit."
+        dropDb
+    fi
+}
+
+function quit()
+{
+    if [ "$1" == 'q' ] || [ "$1" == 'Q' ]
+    then
+        echo ""
+        main   
+    fi
+}
 
 main

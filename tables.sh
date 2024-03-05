@@ -25,7 +25,8 @@ tableMenu() {
         6) echo "updateTable"
         ;;
         7) echo "Exiting Table Menu..."
-           exit 0 
+           cd ../../
+           source "main-menu.sh"
         ;;
         *) echo "Invalid option.. Please enter a choice from 1 to 7" 
         ;;
