@@ -12,17 +12,24 @@ tableMenu() {
     select tableOption in "${tableOptions[@]}"
     do
         case $REPLY in
-        1) ./listTables.sh
+
+        1) clear
+           ../../listTables.sh
            tableMenu
          ;;
-        2) ./createTable.sh
+        2) clear
+           ../../createTable.sh
            tableMenu
         ;;
-        3) echo "insertIntoTable" 
+        3) clear 
+          ../../insertIntoTable.sh 
+          tableMenu
         ;;
         4) echo "DropTable"
         ;;
-        5) echo "selectFromTable" 
+        5) clear
+           ../../selectFromTable.sh
+           echo "selectFromTable" 
         ;;
         6) echo "deleteFromTable"
         ;;
@@ -32,11 +39,13 @@ tableMenu() {
            cd ../../
            source "main-menu.sh"
         ;;
-        *) echo "Invalid option.. Please enter a choice from 1 to 7" 
+        *) echo "Invalid option.. Please enter a choice from 1 to 8" 
         ;;
         esac
     done
 }
+
+export -f tableMenu
 
 # calling the menu function
 tableMenu

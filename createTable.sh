@@ -22,8 +22,16 @@ createTable() {
         return
     fi
    
-    # Ask user for the number of fields/columns
+    while true 
+    do
     read -p "Enter the number of fields/columns: " numFields
+    if [[ $numFields =~ ^[1-9][0-9]*$ ]]
+    then
+        break 
+    else
+        echo "Invalid input. Please enter a valid number greater than 0."
+    fi
+    done
    
     # Initialize arrays to store field information
     fieldNames=()
@@ -162,7 +170,7 @@ createTable() {
     `chmod -R 777 $tableName`
 
     # Create a metadata file
-    echo  $numFields > ".$tableName-metadata" 
+    echo  "$numFields" > ".$tableName-metadata" 
     echo "${fieldNames[*]}" | tr ' ' ':' >> ".$tableName-metadata" 
     echo "${fieldTypes[*]}" | tr ' ' ':' >> ".$tableName-metadata"
     #echo "${fieldNullability[*]}" | tr ' ' ':' >> ".$tableName-metadata"
@@ -170,6 +178,7 @@ createTable() {
 
     echo "Table $tableName created successfully!"
     echo "------------------------------------"
+   
 
     
 }
