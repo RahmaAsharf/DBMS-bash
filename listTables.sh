@@ -1,11 +1,10 @@
 #!/bin/bash
 
-# function to list tables
 listTables() {
 
     tablesExist=0
 
-    echo "List of Tables:"
+    echo -e "\nList of Tables:"
     echo "------------------------------------"
 
     for table in *
@@ -23,6 +22,8 @@ listTables() {
     fi
 
     echo "------------------------------------"
+
+
 }
 
 listTables
