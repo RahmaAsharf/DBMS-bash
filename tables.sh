@@ -12,10 +12,11 @@ tableMenu() {
     select tableOption in "${tableOptions[@]}"
     do
         case $REPLY in
-        1) ./listTables.sh
+        1) ../../listTables.sh
            tableMenu
          ;;
-        2) ./createTable.sh
+        2) ../../createTable.sh
+            #echo $PWD
            tableMenu
         ;;
         3) echo "insertIntoTable" 
@@ -24,9 +25,10 @@ tableMenu() {
         ;;
         5) echo "selectFromTable" 
         ;;
-        6) echo "deleteFromTable"
+        6) ../../delFromTable.sh
         ;;
-        7) echo "updateTable"
+        7) ../../updateTable.sh
+            #tableMenu
         ;;
         8) echo "Exiting Table Menu..."
            cd ../../
