@@ -32,6 +32,7 @@ tableMenu() {
            echo "selectFromTable" 
         ;;
         6) ../../delFromTable.sh
+            tableMenu
         ;;
         7) ../../updateTable.sh
             #tableMenu
