@@ -1,11 +1,15 @@
 #!/bin/bash
 
+blue='\e[1;34m'
+orange='\e[38;5;208m' 
+reset='\e[0m'
+
 listTables() {
 
     tablesExist=0
 
-    echo -e "\nList of Tables:"
-    echo "------------------------------------"
+    echo -e "${blue}\nList of Tables:${reset}"
+    echo -e "${blue}------------------------------------${reset}"
 
     for table in *
     do
@@ -18,10 +22,10 @@ listTables() {
 
     if [ $tablesExist -eq 0 ] 
     then
-        echo "No tables found."
+        echo -e "${orange}No tables found.${reset}"
     fi
 
-    echo "------------------------------------"
+    echo -e "${blue}------------------------------------${reset}\n"
 
 
 }

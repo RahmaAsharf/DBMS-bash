@@ -1,36 +1,40 @@
 #!/bin/bash
 
+blue='\e[1;34m'
+orange='\e[38;5;208m' 
+yellow='\e[1;33'
+red='\e[1;31m'  
+green='\e[1;32m'
+reset='\e[0m'
 
 main(){
 	PS3="Please enter number of your choice: "
 
 options=("Create Database" "List Database" "Connect to Database" "Drop Database" "Exit")
 
- echo "------------------------------------"
- echo "          Main Menu"
- echo "------------------------------------"
+ echo -e "${blue}------------------------------------${reset}"
+ echo -e "${blue}            Main Menu               ${reset}"
+ echo -e "${blue}------------------------------------${reset}"
 
 select option in "${options[@]}"
 do
 case $REPLY in
-	1) echo "Creating DB"
+	1) echo -e "${orange}Creating DB...${reset}"
        createDB
 	   main
         ;;
-	2) echo "Listing DBs"
-       listDatabases
+	2) listDatabases
        main
 	    ;;
-	3) 
-        connectDb
+	3) connectDb
         ;;
 	4) echo "Dropping DB"
         dropDb
         ;;
-    5) echo "Exiting..."
+    5) echo "Exiting see you soon!..."
         exit 0
         ;; 
-	*) echo "Invalid option.. Please enter a choice from 1 to 5"
+	*) echo -e "${red}Invalid option.. Please enter a choice from 1 to 5${reset}"
         ;;
 esac
 done
@@ -42,7 +46,7 @@ createDB() {
     # check for spaces and special characters
     if [[ ! $dbName =~ ^[a-zA-Z0-9_]+$ ]]
 	then
-        echo "Error: Database name cannot have space or special characters"
+        echo -e "${red}Error: Database name cannot have space or special characters${reset}"
         echo "------------------------------------"
         return
     fi
@@ -50,7 +54,7 @@ createDB() {
     # check if DB name starts with a letter
     if [[ ! $dbName =~ ^[a-zA-Z] ]]
 	then
-        echo "Error: Database name must start with a letter."
+        echo -e "${red}Error: Database name must start with a letter.${reset}"
         echo "------------------------------------"
         return
     fi
@@ -58,7 +62,7 @@ createDB() {
     # check if DB already exists
     if [ -d "./databases/$dbName" ]
 	then
-        echo "Error: Database $dbName already exists."
+        echo -e "${red}Error: Database $dbName already exists.${reset}"
         echo "------------------------------------"
         return
     fi
@@ -67,42 +71,44 @@ createDB() {
     mkdir -p "./databases/$dbName"
     if [ $? -eq 0 ]
 	then
-        echo "Database $dbName created successfully!"
+        echo -e "${green}Database $dbName created successfully!${reset}"
         echo "------------------------------------"
     else
-        echo "Error creating database $dbName."
+        echo -e "${red}Error creating database $dbName.${reset}"
     fi
 }
 
 listDatabases() {
     if [ ! -d "./databases" ]
     then
-        echo "No databases found."
+        echo -e "${orange}No databases found.${reset}"
         echo "------------------------------------"
     else
-        echo "List of Databases:"
-        echo "------------------------------------"
+        echo -e "${blue}\nList of Databases:${reset}"
+        echo -e "${blue}------------------------------------${reset}"
 
         # redirecting stderr to /dev/null to suppress the error message
         for dbDir in "./databases"/*/
         do
             echo "$(basename "$dbDir")"
         done 2>/dev/null
-        echo "------------------------------------"
+         echo -e "${blue}------------------------------------${reset}\n"
     fi
 }
 
 function connectDb()
 {
     listDatabases
-    echo "--------------------------------------------------------"
     read -p "Please enter the name of DB you want to connect: " connectdb
 
     #----------------- check if the db is excisted--------------------
     if [ -d "./databases/$connectdb" ]
     then
         cd "./databases/$connectdb"
-        echo $PWD
+        #echo $PWD
+        export connectdb
+        clear
+        #echo $PWD
         source "../../tables.sh"
 
     else
@@ -126,7 +132,7 @@ function dropDb()
                 [yY])
                     rm -r "./databases/$connectdb"
                     echo " "
-                    echo "$connectdb is deleted successfully"
+                    echo -e "${green}$connectdb is deleted successfully${reset}"
                     ./main-menu.sh
                     ;;
                 [qQ])
@@ -134,13 +140,12 @@ function dropDb()
                     ;;
                 *)
                     echo " "
-                    echo "Invalid choice. Please enter 'y' or 'q'."
+                    echo -e "${red}Invalid choice. Please enter 'y' or 'q'.${reset}"
                     ;;
             esac
         done
     else
-        #---------------------------need to handle here
-        echo "You don't have a DB with this name. Choose an existing one or [q] to quit."
+        echo -e "${orange} Please enter any key to re-choose or [q] to quit: ${reset}"
         dropDb
     fi
 }

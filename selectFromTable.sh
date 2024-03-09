@@ -5,6 +5,7 @@ yellow='\033[1;33'
 red='\033[1;31m'  
 reset='\033[0m'
 
+
 # to select all data from the table
 select_all() {
 
@@ -161,7 +162,7 @@ selection() {
         then
             echo -e "${blue}\n*********************** Table $table *************************${reset}"
             echo -e "${blue}************************************************************${reset}"
-            echo -e "${blue}Value '$val' found in rows: \033[0m"
+            echo -e "${blue}Value '$val' found in rows: ${reset}"
             for ((i=0; i<${#fields[@]}; i++))
             do
                 printf "${yellow}m%-15s${reset}" "${fields[$i]}"  
@@ -175,7 +176,7 @@ selection() {
             echo "Value $val not found in column $col"
         fi
     else 
-        echo "Please enter an existing column from 1 to $numFields"
+        echo -e "${red}Please enter an existing column from 1 to $numFields${reset}"
     fi
 }
 
@@ -184,9 +185,9 @@ selectFromTable() {
     PS3="Please select an option: "
     options=("Select all" "Select by column (projection)" "Select rows (selection) with condition" "Exit")
 
-    echo "------------------------------------"
-    echo "          Select from Table"
-    echo "------------------------------------"
+    echo -e "${blue}------------------------------------${reset}"
+    echo -e "${blue}       Select From Table Menu       ${reset}"
+    echo -e "${blue}------------------------------------${reset}"
 
     select option in "${options[@]}"
     do
@@ -199,12 +200,12 @@ selectFromTable() {
             ;;
             3) selection
               selectFromTable
-              echo "selection"  
             ;;
-            4) tableMenu
-               echo "Exiting..." 
+            4) echo "Exiting select menu..." 
+               tableMenu
+               
             break ;;
-            *) echo "Invalid option. Please select a number from 1 to 4." ;;
+            *) echo -e "${red}Invalid option. Please select a number from 1 to 4.${reset}" ;;
         esac
     done
 }
