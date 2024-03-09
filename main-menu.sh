@@ -2,7 +2,7 @@
 
 blue='\e[1;34m'
 orange='\e[38;5;208m' 
-yellow='\e[1;33m'
+yellow='\e[1;33'
 red='\e[1;31m'  
 green='\e[1;32m'
 reset='\e[0m'
@@ -125,19 +125,19 @@ function connectDb()
 function dropDb()
 {
     listDatabases
-    read -p "Please enter the name of DB you want to drop: " dropDb
+    read -p "Please enter the name of DB you want to drop: " connectdb
 
     #----------------- check if the db is existed--------------------
-    if [ -d "./databases/$dropDb" ]
+    if [ -d "./databases/$connectdb" ]
     then
         while true
         do
-            read -p "Are you sure you want to delete $dropDb permanently? [y]/[q] to quit : " -n 1 yes
+            read -p "Are you sure you want to delete $connectdb permanently? [y]/[q] to quit : " -n 1 yes
             case $yes in
                 [yY])
-                    rm -r "./databases/$dropDb"
+                    rm -r "./databases/$connectdb"
                     echo " "
-                    echo -e "${green}$dropDb is deleted successfully${reset}"
+                    echo -e "${green}$connectdb is deleted successfully${reset}"
                     ./main-menu.sh
                     ;;
                 [qQ])
@@ -165,6 +165,3 @@ function quit()
 }
 
 main
-
-export yellow red orange blue green reset 
-export -f main listDatabases
