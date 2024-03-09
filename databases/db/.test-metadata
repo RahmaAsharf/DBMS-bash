@@ -1,0 +1,4 @@
+3
+id:name:age
+int:string:int
+primary:notprimary:notprimary
