@@ -14,32 +14,27 @@ insertIntoTable() {
     fi
 
     # check if metadata file exists
-    metadataFile=".$tableToInsert-metadata"
-    if [ ! -f "$metadataFile" ]
+    metadata=".$tableToInsert-metadata"
+    if [ ! -f "$metadata" ]
     then
         echo "Error: Metadata file for table '$tableToInsert' not found."
         tableMenu
     fi
 
-  
-    numFields=$(head -n 1 "$metadataFile") 2>/dev/null
-    fieldNamesArr=($(sed -n '2p' "$metadataFile" | tr ':' ' ')) 2>/dev/null
-    fieldTypesArr=($(sed -n '3p' "$metadataFile" | tr ':' ' ')) 2>/dev/null
-    fieldPrimaryKeysArr=($(sed -n '4p' "$metadataFile" | tr ':' ' ')) 2>/dev/null
+    numFields=$(head -n 1 "$metadata") 2>/dev/null
+    fieldNamesArr=($(sed -n '2p' "$metadata" | tr ':' ' ')) 2>/dev/null
+    fieldTypesArr=($(sed -n '3p' "$metadata" | tr ':' ' ')) 2>/dev/null
+    fieldPrimaryKeysArr=($(sed -n '4p' "$metadata" | tr ':' ' ')) 2>/dev/null
 
-    #echo "${fieldNamesArr[@]}"
-    #echo "${fieldPrimaryKeysArr[@]}"
-
-   #getting which field is primary
-   for ((i = 0; i < ${#fieldPrimaryKeysArr[@]}; i++))
-   do
-    if [[ ${fieldPrimaryKeysArr[$i]} == "primary" ]]
-    then
-        primaryIndex=$i
-        break
-    fi
-   done
-
+    #getting which field is primary
+    for ((i = 0; i < ${#fieldPrimaryKeysArr[@]}; i++))
+    do
+        if [[ ${fieldPrimaryKeysArr[$i]} == "primary" ]]
+        then
+            primaryIndex=$i
+            break
+        fi
+    done
 
    primaryField=$((primaryIndex+1))
    #echo $primaryField
@@ -49,7 +44,7 @@ insertIntoTable() {
     # display field names to the user
     echo "Fields to enter data: ${fieldNamesArr[@]}"
 
-    # Prompt the user to enter values for each field
+    # prompt the user to enter values for each field
     declare -a fieldValuesArr
     for ((i = 0; i < numFields; i++))
     do
