@@ -23,15 +23,18 @@ case $REPLY in
        createDB
 	   main
         ;;
-	2) listDatabases
+	2) clear
+        listDatabases
        main
 	    ;;
-	3) connectDb
+	3) clear
+        connectDb
         ;;
-	4) echo "Dropping DB"
+	4) clear
         dropDb
         ;;
-    5) echo "Exiting see you soon!..."
+    5) clear
+        echo "Exiting see you soon!..."
         exit 0
         ;; 
 	*) echo -e "${red}Invalid option.. Please enter a choice from 1 to 5${reset}"

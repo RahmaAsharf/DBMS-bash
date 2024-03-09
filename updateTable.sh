@@ -20,8 +20,7 @@ function updateTable() {
 
     while true
     do
-        read -p "$(echo -e "${red}Which tableToUpdate do you want to update? [q] to quit: ${reset}")" tableToUpdate
-        quit "$tableToUpdate"
+        read -p "$(echo -e "${red}Which table do you want to update? [q] to quit: ${reset}")" tableToUpdate
 
         if [ "$tableToUpdate" == 'q' ] || [ "$tableToUpdate" == 'Q' ]
         then
@@ -101,9 +100,9 @@ function updateTable() {
                                 then
                                     read -p "$(echo -e "${red}Error: Value must be an integer for field '${fields[$((colToUpdate - 1))]}'. Enter a valid value or 'q' to quit: ${reset}")" newVal
                                     quit "$newVal"
-                                elif [[ ${fieldTypesArr[$((colToUpdate - 1))]} == "string" && ! $newVal =~ ^[[:alpha:]]+$ ]]
+                                elif [[ ${fieldTypesArr[$((colToUpdate - 1))]} == "string" && ! $newVal =~ ^[^:]+$ ]]
                                 then
-                                    read -p "$(echo -e "${red}Error: Value must be alpha characters only for field '${fields[$((colToUpdate - 1))]}'.' Enter a valid value or 'q' to quit: ${reset}")" newVal
+                                    read -p "$(echo -e "${red}Error: Value can't have ':' for field '${fields[$((colToUpdate - 1))]}'.' Enter a valid value or 'q' to quit: ${reset}")" newVal
                                     quit "$newVal"
                                 else
                                     break
@@ -116,7 +115,8 @@ function updateTable() {
                                 sed -i "s/$val/$newVal/g" "$tableToUpdate"
                                 clear
                                 echo -e "${green}Rows with '${fields[$colToUpdate - 1]}' = '$val' updated successfully${reset}"
-                                updateTable
+                                clear
+                                updateTableq
                             else
                                 echo -e "${red}Value $val not found in column $colToUpdate${reset}"
                             fi
@@ -136,3 +136,4 @@ function updateTable() {
 
 # Call the main function
 updateTable
+exit 0

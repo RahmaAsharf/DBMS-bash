@@ -28,20 +28,24 @@ tableMenu() {
            ../../createTable.sh
            tableMenu
         ;;
-        3) clear 
-          ../../insertIntoTable.sh 
-          tableMenu
+        3)  clear 
+            ../../insertIntoTable.sh 
+            ableMenu
         ;;
-        4) echo "DropTable"
+        4) clear
+            ../../dropTable.sh
+            tableMenu
         ;;
         5) clear
            ../../selectFromTable.sh
            echo "selectFromTable" 
         ;;
-        6) ../../delFromTable.sh
+        6)  clear
+            ../../delFromTable.sh
             tableMenu
         ;;
-        7) ../../updateTable.sh
+        7) clear
+            ../../updateTable.sh
             tableMenu
         ;;
         8) echo -e "${orange}Exiting Table Menu...\n${reset}"

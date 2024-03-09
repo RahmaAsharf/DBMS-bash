@@ -1,4 +1,4 @@
 3
-id:name:age
+is:name:age
 int:string:int
 primary:notprimary:notprimary

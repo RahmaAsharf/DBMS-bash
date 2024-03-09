@@ -95,9 +95,9 @@ insertIntoTable() {
                 if [[ ${fieldTypesArr[$i]} == "int" && ! $fieldValue =~ ^[0-9]+$ ]]
                 then
                     echo -e "${red}Error: Value must be an integer for field '${fieldNamesArr[$i]}'.${reset}"
-                elif [[ ${fieldTypesArr[$i]} == "string" && ! $fieldValue =~ ^[a-zA-Z0-9_-]+$ ]]
+                elif [[ ${fieldTypesArr[$i]} == "string" && ! $fieldValue =~ ^[^:]+$ ]]
                 then
-                    echo -e "${red}Error: Value must be a string for field '${fieldNamesArr[$i]}'.${reset}"
+                    echo -e "${red}Error: Value must be a string for field '${fieldNamesArr[$i]}'and it can't have ':'.${reset}"
                 else
                     # value is valid, add it to the array and break out of the loop
                     fieldValuesArr[$i]=$fieldValue
