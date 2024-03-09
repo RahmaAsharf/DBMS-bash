@@ -1,114 +1,138 @@
 #!/bin/sh
 
-updateTable(){
-    # List available tables
-    ../../listTables.sh
+blue='\e[1;34m'
+orange='\e[38;5;208m'
+yellow='\e[1;33m'
+red='\e[1;31m'
+green='\e[1;32m'
+reset='\e[0m'
 
-    read -p "$(echo -e "${red}Which table do you want to update? [q] to quit: ${reset}")" table
-
-    if [ "$table" == 'q' ] || [ "$table" == 'Q' ]; then
-        echo "You pressed quit."
-        ../../tables.sh
-    else
-        if [ -f "$table" ]
-        then
-            if [ -f ".$table-metadata" ] 
-            then
-                metadataFile=".$table-metadata"
-
-                numFields=$(head -n 1 "$metadataFile") 2>/dev/null
-                fieldTypesArr=($(sed -n '3p' "$metadataFile" | tr ':' ' ')) 2>/dev/null
-                fieldPrimaryKeysArr=($(sed -n '4p' "$metadataFile" | tr ':' ' ')) 2>/dev/null
-                fieldNamesArr=($(sed -n '2p' "$metadataFile" | tr ':' ' ')) 2>/dev/null
-                #fieldNamesArr=($(awk -F: 'NR==2 {for (i=1; i<=NF; i++) print i"-"$i }' "$metadataFile"))
-
-                for ((i = 0; i < ${#fieldPrimaryKeysArr[@]}; i++)); do
-                    if [[ ${fieldPrimaryKeysArr[$i]} == "primary" ]]; then
-                        primaryIndex=$i
-                        break
-                    fi
-                done
-                primaryField=$((primaryIndex+1))
-
-                #echo "$primaryField"
-                #echo -e "Fields in table $table:\n${fieldNamesArr[@]}"
-                echo -e "\nAvailable columns for update:"
-                for ((i=0; i<${#fieldNamesArr[@]}; i++))
-                do
-                    echo "$(($i+1)). ${fieldNamesArr[$i]}"
-                done
-                #////////////////////////////////////////////////////////////////////////////
-                read -p "$(echo -e "${blue}Which column: ${reset}")" col
-
-                if [[ $col -gt 0 ]] && [[ $col -le $numFields ]]; then
-                    read -p "$(echo -e "${blue}Where value ([q] to quit): ${reset}")" val
-                    read -p "$(echo -e "${blue}To be Updated with : ([q] to quit): ${reset}")" newVal
-                
-                    if [[ $col -eq $primaryField ]] 
-                    then
-                        
-                        if [[ -z $newVal ]]
-                        then
-                            echo "Error: Primary field cannot be null."
-                            updateTable
-                        fi
-                        
-                        primaryFieldValues=($(awk -F ':' -v field=$primaryField '{print $field}' "$table")) 2>/dev/null
-                        uniqueVal=false
-
-                        while ! $uniqueVal 
-                        do
-                            uniqueVal=true
-
-                            for value in "${primaryFieldValues[@]}"
-                            do
-                                if [[ "$newVal" == "$value" ]]
-                                then
-                                    echo "Error: Value for primary field already exists."
-                                    read -p "Enter new value for primary field '${fieldNamesArr[$primaryIndex]}': " newVal
-
-                                    uniqueVal=false
-                                    break
-                                fi
-                            done
-                            
-                        done
-
-                    fi
-                else
-                    echo -e "${red}Please enter an existing column from 1 to $numFields${reset}"
-                fi
-                #/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                if [[ ${fieldTypesArr[$col-1]} == "int" && ! $newVal =~ ^[0-9]+$ ]] 
-                then
-                    echo "Error: Value must be an integer for field '${fieldNamesArr[$col-1]}'."
-                    
-                elif [[ ${fieldTypesArr[$col-1]} == "string" && ! $newVal =~ ^[a-zA-Z0-9_-]+$ ]]
-                then
-                    echo "Error: Value must be a string for field '${fieldNamesArr[$col-1]}'."
-                else
-
-                    if $(cut -d: -f"$col" "$table" | grep -q "^$val$") 
-                    then
-                        #awk -F: -v col="$col" -v val="$val" '$col == val {print NR, $0}' "$table"
-                        sed -i "s/$val/$newVal/g" "$table"
-                        
-                        echo -e "${green}Rows with '$desiredcol' = '$val' updated successfully${reset}"
-
-                    else
-                        echo -e "${red}Value $val not found in column $desiredcol${reset}"
-
-                    fi
-                fi
-            else
-                echo "Error:Metadata file for table '$table' not found."
-            fi
-        else
-            echo "Error: Table '$table' not found."
-            updateTable
-        fi
+function quit() {
+    if [ "$1" == 'q' ] || [ "$1" == 'Q' ]
+    then
+        clear
+        updateTable
     fi
 }
 
+function updateTable() {
+    ../../listTables.sh
+
+    while true
+    do
+        read -p "$(echo -e "${red}Which tableToUpdate do you want to update? [q] to quit: ${reset}")" tableToUpdate
+        quit "$tableToUpdate"
+
+        if [ "$tableToUpdate" == 'q' ] || [ "$tableToUpdate" == 'Q' ]
+        then
+            echo "You pressed quit."
+            ../../tables.sh
+        elif [ -f "$tableToUpdate" ] && [ -f ".$tableToUpdate-metadata" ]
+        then
+            # Variables initialization
+            metadata=".$tableToUpdate-metadata"
+            numFields=$(head -n 1 "$metadata" 2>/dev/null)
+            fields=($(sed -n '2p' "$metadata" | tr ':' ' ' 2>/dev/null))
+            fieldTypesArr=($(sed -n '3p' "$metadata" | tr ':' ' ' 2>/dev/null))
+            fieldPrimaryKeysArr=($(sed -n '4p' "$metadata" | tr ':' ' ' 2>/dev/null))
+            echo "${fieldTypesArr[0]}"
+
+            for ((i = 0; i < ${#fieldPrimaryKeysArr[@]}; i++))
+            do
+                if [[ ${fieldPrimaryKeysArr[$i]} == "primary" ]]
+                then
+                    primaryIndex=$i
+                    break
+                fi
+            done
+            primaryField=$((primaryIndex + 1))
+
+            # Listing columns in the table
+            echo -e "\nColumns in table $tableToUpdate:"
+            for ((i = 0; i < ${#fields[@]}; i++))
+            do
+                echo "$(($i + 1)). ${fields[$i]}"
+            done
+
+            # While loop for updating
+            while true
+            do
+                read -p "$(echo -e "${blue}Which column you want to update by (select by number): [q] to quit: ${reset}")" colToUpdate
+                quit "$colToUpdate"
+
+                # Checking if the colToUpdate num is available
+                if [[ $colToUpdate -gt 0 ]] && [[ $colToUpdate -le $numFields ]]
+                then
+                    while true
+                    do
+                        read -p "$(echo -e "${blue}Where value: [q] to quit: ${reset}")" val
+                        quit "$val"
+
+                        if $(cut -d: -f"$colToUpdate" "$tableToUpdate" | grep -q "^$val$")
+                        then
+                            while true
+                            do
+                                read -p "$(echo -e "${blue}To be Updated with: [q] to quit: ${reset}")" newVal
+                                quit "$newVal"
+
+                                # Checking if colToUpdate is PK
+                                if [[ $colToUpdate -eq $primaryField ]]
+                                then
+                                    # Checking if it is null
+                                    if [[ -z $newVal ]]
+                                    then
+                                        echo -e "${red}Error: Primary field cannot be null. Enter a valid value or 'q' to quit.${reset}"
+                                        continue  # Go back to the previous loop
+                                    # Checking if the newVal is unique
+                                    elif $(cut -d: -f"$colToUpdate" "$tableToUpdate" | grep -q "^$newVal$")
+                                    then
+                                        echo -e "${red}Error: '$newVal' already exists, Primary field must be unique. Enter a valid value or 'q' to quit.${reset}"
+                                        continue  # Go back to the previous loop
+                                    else
+                                        break
+                                    fi
+                                else
+                                    break
+                                fi
+                            done
+
+                            while true; do
+                                if [[ ${fieldTypesArr[$((colToUpdate - 1))]} == "int" && ! $newVal =~ ^[0-9]+$ ]]
+                                then
+                                    read -p "$(echo -e "${red}Error: Value must be an integer for field '${fields[$((colToUpdate - 1))]}'. Enter a valid value or 'q' to quit: ${reset}")" newVal
+                                    quit "$newVal"
+                                elif [[ ${fieldTypesArr[$((colToUpdate - 1))]} == "string" && ! $newVal =~ ^[[:alpha:]]+$ ]]
+                                then
+                                    read -p "$(echo -e "${red}Error: Value must be alpha characters only for field '${fields[$((colToUpdate - 1))]}'.' Enter a valid value or 'q' to quit: ${reset}")" newVal
+                                    quit "$newVal"
+                                else
+                                    break
+                                fi
+                            done
+
+                            # If everything is valid, update the table
+                            if $(cut -d: -f"$colToUpdate" "$tableToUpdate" | grep -q "^$val$")
+                            then
+                                sed -i "s/$val/$newVal/g" "$tableToUpdate"
+                                clear
+                                echo -e "${green}Rows with '${fields[$colToUpdate - 1]}' = '$val' updated successfully${reset}"
+                                updateTable
+                            else
+                                echo -e "${red}Value $val not found in column $colToUpdate${reset}"
+                            fi
+                        else
+                            echo -e "${red}'$val' is not a valid value in column $colToUpdate, please pick a valid one or 'q' to quit.${reset}"
+                        fi
+                    done
+                else
+                    echo -e "${red}Please enter an existing column from 1 to $numFields or 'q' to quit.${reset}"
+                fi
+            done
+        else
+            echo -e "${red}Error: Table '$tableToUpdate' not found.${reset}"
+        fi
+    done
+}
+
+# Call the main function
 updateTable

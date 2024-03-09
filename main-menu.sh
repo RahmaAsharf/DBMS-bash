@@ -125,8 +125,10 @@ function dropDb()
     read -p "Please enter the name of DB you want to drop: " connectdb
 
     #----------------- check if the db is existed--------------------
-    if [ -d "./databases/$connectdb" ]; then
-        while true; do
+    if [ -d "./databases/$connectdb" ]
+    then
+        while true
+        do
             read -p "Are you sure you want to delete $connectdb permanently? [y]/[q] to quit : " -n 1 yes
             case $yes in
                 [yY])

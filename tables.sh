@@ -42,7 +42,7 @@ tableMenu() {
             tableMenu
         ;;
         7) ../../updateTable.sh
-            #tableMenu
+            tableMenu
         ;;
         8) echo -e "${orange}Exiting Table Menu...\n${reset}"
            cd ../../
