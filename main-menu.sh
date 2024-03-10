@@ -44,12 +44,20 @@ done
 }
 
 createDB() {
+     if [ ! -w . ] 
+     then
+        echo -e "${red}Error: You do not have permission to create a database in current directory.${reset}"
+        echo -e "${red}Please revise your permissions!${reset}"
+        echo "------------------------------------"
+        return
+    fi
+
     read -p "Please enter Database Name: " dbName
 
     # check for spaces and special characters
     if [[ ! $dbName =~ ^[a-zA-Z0-9_]+$ ]]
 	then
-        echo -e "${red}Error: Database name cannot have space or special characters${reset}"
+        echo -e "${red}Error: Database name cannot have space or special characters (only underscore)${reset}"
         echo "------------------------------------"
         return
     fi
@@ -82,7 +90,16 @@ createDB() {
 }
 
 listDatabases() {
-    if [ ! -d "./databases" ]
+    if [ ! -r "./databases" ]
+    then
+        echo -e "${red}Error: You don't have permission to list databases.${reset}"
+        echo -e "${red}Please revise your permissions!${reset}"
+        echo "------------------------------------"
+        return
+    fi
+
+    if [ ! -d "./databases" ] || [ -z "$(ls -d ./databases/*/ 2>/dev/null)" ]
+
     then
         echo -e "${orange}No databases found.${reset}"
         echo "------------------------------------"
@@ -90,12 +107,11 @@ listDatabases() {
         echo -e "${blue}\nList of Databases:${reset}"
         echo -e "${blue}------------------------------------${reset}"
 
-        # redirecting stderr to /dev/null to suppress the error message
         for dbDir in "./databases"/*/
         do
             echo "$(basename "$dbDir")"
-        done 2>/dev/null
-         echo -e "${blue}------------------------------------${reset}\n"
+        done 2>/dev/null     # redirecting stderr to /dev/null to suppress the error message
+        echo -e "${blue}------------------------------------${reset}\n"
     fi
 }
 
@@ -159,7 +175,7 @@ function quit()
 {
     if [ "$1" == 'q' ] || [ "$1" == 'Q' ]
     then
-        echo ""
+        echo "Quitting"
         main   
     fi
 }
