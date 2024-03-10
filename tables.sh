@@ -1,12 +1,11 @@
 #!/bin/bash
 function quit() {
-    if [ "$1" == 'q' ] || [ "$1" == 'Q' ]; then
+    if [ "$1" == ':q' ] || [ "$1" == ':Q' ]; then
         clear
         echo -e "${orange}Quitting!${reset}"
         $2  
     fi
 }
-
 
 #-----------------------------------------LIST TABLES--------------------------------------
 listTables() {
@@ -37,9 +36,10 @@ listTables() {
 tableRegex='^[a-zA-Z_][a-zA-Z0-9_]*$'
 createTable() {
     # Ask user for table name
-    echo -e "${yellow}NOTE: (no spaces, cannot begin with a number, no special characters)${reset}"
+    echo -e "${yellow}NOTE: (no spaces, cannot begin with a number, no special characters)\n${reset}"
+    #echo -e "${yellow}NOTE: to quit at any point enter ':q'\n${reset}"
 
-    read -p "Enter the table name ([q] to quit): " tableName
+    read -p "Enter the table name or ':q' to quit: " tableName
     quit "$tableName" "tableMenu"
 
     # Check if the table name already exists
@@ -58,7 +58,7 @@ createTable() {
    
     while true 
     do
-    read -p "Enter the number of fields/columns ([q] to quit):" numFields
+    read -p "Enter the number of fields/columns or ':q' to quit: " numFields
     quit "$numFields" "tableMenu"
     if [[ $numFields =~ ^[1-9][0-9]*$ ]]
     then
@@ -81,7 +81,7 @@ createTable() {
         echo "Field $i:"
 
         # Ask for field name
-        read -p "Enter the field name ([q] to quit): " fieldName
+        read -p "Enter the field name: " fieldName
         quit "$fieldName" "tableMenu"
 
         # Check regex for field name
@@ -98,14 +98,17 @@ createTable() {
             while true     # ask if it's a primary key
             do
                 PS3="Is it a primary key? "
-                select isPrimaryOption in "yes" "no"
+                select isPrimaryOption in "yes" "no" "quit"
                 do
                 case $REPLY in
                 1) primary="primary"; primaryKeyIsSet=1
                 break ;;
                 2) primary="notprimary" 
                  break ;;
-                *) echo -e "${red}Invalid option.. Please enter 1 or 2${reset}" ;;
+                3) echo -e "${orange}Quitting!${reset}"
+                tableMenu
+                ;;
+                *) echo -e "${red}Invalid option.. Please enter 1,2 or 3${reset}" ;;
                 esac
                 done
 
@@ -122,14 +125,16 @@ createTable() {
          while true    # ask if it's a String or int
          do
             PS3="Select field type : "
-            select fieldOption in "string" "int"; 
+            select fieldOption in "string" "int" "quit"
             do
             case $REPLY in
             1) fieldType="string"
             break ;;
             2) fieldType="int"
             break ;;
-            *) echo -e "${red}Invalid option.. Please enter 1 or 2${reset}" ;;
+            3) echo -e "${orange}Quitting!${reset}"
+               tableMenu  ;;
+            *) echo -e "${red}Invalid option.. Please enter 1,2 or 3${reset}" ;;
             esac
             done
 
@@ -176,7 +181,6 @@ createTable() {
     echo  "$numFields" > ".$tableName-metadata" 
     echo "${fieldNames[*]}" | tr ' ' ':' >> ".$tableName-metadata" 
     echo "${fieldTypes[*]}" | tr ' ' ':' >> ".$tableName-metadata"
-    #echo "${fieldNullability[*]}" | tr ' ' ':' >> ".$tableName-metadata"
     echo "${fieldPrimaryKeys[*]}" | tr ' ' ':' >> ".$tableName-metadata"
 
     echo -e "${green}Table $tableName created successfully!${reset}"
@@ -187,14 +191,15 @@ createTable() {
 insertIntoTable() {
    
     listTables
-
+    echo -e "${yellow}NOTE: to quit at any point enter ':q'\n${reset}"
     echo -e "${orange}Which table do you want to insert data into? ${reset}"
     read tableToInsert
+    quit "$tableToInsert" "tableMenu"
 
     # check if the table name is in DB
     if [ ! -f "$tableToInsert" ]
     then
-        echo -e "${red}Error: Table with the name '$tableToInsert' does not exist in your DB.\n3${reset}"
+        echo -e "${red}Error: Table with the name '$tableToInsert' does not exist in your DB.\n${reset}"
         tableMenu
     fi
 
@@ -237,6 +242,7 @@ insertIntoTable() {
         do
             # prompt the user to enter the value for the field
             read -p "Enter value for '${fieldNamesArr[$i]}': " fieldValue
+            quit "$fieldValue" "tableMenu"
 
             # check if it's empty
             if [[ $i -eq $primaryIndex && -z $fieldValue ]]
@@ -259,7 +265,8 @@ insertIntoTable() {
                             if [[ "$fieldValue" == "$value" ]]
                             then
                                 echo -e "${red}Error: Value for primary field already exists.${reset}"
-                                read -p "Enter value for primary field '${fieldNamesArr[$primaryIndex]}': " fieldValue
+                                read -p "Enter value for primary field '${fieldNamesArr[$primaryIndex]}' or ([q] to quit): " fieldValue
+                                quit "$fieldValue" "tableMenu"
                             
                                 uniqueVal=false    # set uniqueVal to false if the value already exists
                                 break
@@ -267,7 +274,7 @@ insertIntoTable() {
                         done
                     done
                 fi
-
+  
                 # validation against types
                 if [[ ${fieldTypesArr[$i]} == "int" && ! $fieldValue =~ ^[0-9]+$ ]]
                 then
@@ -414,7 +421,10 @@ updateTable() {
 select_all() {
 
     listTables
-    read -p "Which table do you want to select from? " table
+    echo -e "${orange}Which table do you want to select from? ([:q] to quit)${reset}"
+    read table
+    quit "$table" "selectFromTable"
+
     metadata=".$table-metadata"
      # check if the table name is in DB
     if [ ! -f "$table" ]
@@ -438,7 +448,7 @@ select_all() {
 
     for ((i=0; i<${#fields[@]}; i++))
     do
-        printf "${yellow}m%-15s${reset}" "${fields[$i]}"  
+        printf "${yellow}%-15s${reset}" "${fields[$i]}"  
     done
 
     echo -e "${blue}\n************************************************************${reset}"
@@ -456,7 +466,9 @@ select_all() {
 projection() {
 
     listTables
-    read -p "Which table do you want to select from? " table
+    echo -e "${orange}Which table do you want to select from? ([:q] to quit)${reset}"
+    read table
+    quit "$table" "selectFromTable"
     metadata=".$table-metadata"
 
     if [ ! -f "$table" ]
@@ -480,7 +492,9 @@ projection() {
         echo "$(($i+1)). ${fields[$i]}"
     done
 
-    read -p "Enter column numbers separated by spaces: " cols
+    echo -e "${orange}Enter column numbers separated by spaces or ([:q] to quit)${reset}"
+    read cols
+    quit "$cols" "selectFromTable"
 
     # validate selected columns
     colExists=true
@@ -506,7 +520,7 @@ projection() {
     for col in $cols 
     do
         index=$(($col - 1))
-        printf "${yellow}m%-16s${reset}" "${fields[$index]}"
+        printf "${yellow}%-16s${reset}" "${fields[$index]}"
     done
 
     #  printing selected columns
@@ -523,9 +537,11 @@ projection() {
 }
 
 selection() {
-
+   
     listTables
-    read -p "Which table do you want to select from? " table
+    echo -e "${orange}Which table do you want to select from? ([:q] to quit) ${reset}"
+    read table
+    quit "$table" "selectFromTable"
     metadata=".$table-metadata"
 
     if [ ! -f "$table" ]
@@ -561,10 +577,10 @@ selection() {
         then
             echo -e "${blue}\n*********************** Table $table *************************${reset}"
             echo -e "${blue}************************************************************${reset}"
-            echo -e "${blue}Value '$val' found in rows: ${reset}"
+            echo -e "${green}Value '$val' found in rows: ${reset}"
             for ((i=0; i<${#fields[@]}; i++))
             do
-                printf "${yellow}m%-15s${reset}" "${fields[$i]}"  
+                printf "${yellow}%-15s${reset}" "${fields[$i]}"  
             done
             echo -e "${blue}\n************************************************************${reset}"
             awk -F ':' -v col="$col" -v val="$val" '{ if ($col == val) 
@@ -572,7 +588,7 @@ selection() {
             echo -e "${blue}************************************************************${reset}"
 
         else
-            echo "Value $val not found in column $col"
+            echo -e "${red}Value $val not found in column $col${reset}"
         fi
     else 
         echo -e "${red}Please enter an existing column from 1 to $numFields${reset}"
@@ -581,7 +597,7 @@ selection() {
 # menu to select from
 selectFromTable() {
     PS3="Please select an option: "
-    options=("Select all" "Select by column (projection)" "Select rows (selection) with condition" "Exit")
+    options=("Select all" "Select by column (projection)" "Select rows (selection) with condition" "Exit Select Menu")
 
     echo -e "${blue}------------------------------------${reset}"
     echo -e "${blue}       Select From Table Menu       ${reset}"
@@ -721,7 +737,7 @@ dropTable() {
 # main menu for tables inside connected DB
 tableMenu() {
     PS3="Please enter the number of your choice: "
-    tableOptions=("List Tables" "Create Table" "Insert in table" "Drop table" "Select from table" "Delete from table" "Update from table" "Exit Table Menu")
+    tableOptions=("List Tables" "Create Table" "Insert in table" "Drop table" "Select from table" "Delete from table" "Update from table" "Exit Table Menu" "Exit program")
 
     echo -e "${orange}___________  In $connectdb DB ____________${reset}"
     echo -e "${blue}------------------------------------${reset}"
@@ -764,6 +780,9 @@ tableMenu() {
            cd ../../
            main
         ;;
+        9) echo -e "${yellow}Exiting see you soon!...${reset}"
+           exit 0
+        ;; 
         *) echo -e "${red}Invalid option.. Please enter a choice from 1 to 8${reset}" 
         ;;
         esac

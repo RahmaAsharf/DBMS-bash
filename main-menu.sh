@@ -10,7 +10,7 @@ reset='\e[0m'
 main(){
 	PS3="Please enter number of your choice: "
 
-options=("Create Database" "List Database" "Connect to Database" "Drop Database" "Exit")
+options=("Create Database" "List Database" "Connect to Database" "Drop Database" "Exit Program")
 
  echo -e "${blue}------------------------------------${reset}"
  echo -e "${blue}            Main Menu               ${reset}"
@@ -115,7 +115,7 @@ function connectDb()
         source "../../tables.sh"
 
     else
-        read -p "You don't have a DB with this name choose excisted one or [q] to quit : " op
+        read -p "Please enter any key to re-choose or [q] to quit: " op
         quit $op
         connectDb
     fi
