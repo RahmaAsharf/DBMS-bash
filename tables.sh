@@ -6,7 +6,6 @@ function quit() {
         $2  
     fi
 }
-
 #-----------------------------------------LIST TABLES--------------------------------------
 listTables() {
 
@@ -302,9 +301,9 @@ updateTable() {
 
     while true
     do
-        read -p "$(echo -e "${red}Which table do you want to update? [q] to quit: ${reset}")" tableToUpdate
+        read -p "$(echo -e "${red}Which table do you want to update? [:q] to quit: ${reset}")" tableToUpdate
 
-        if [ "$tableToUpdate" == 'q' ] || [ "$tableToUpdate" == 'Q' ]
+        if [ "$tableToUpdate" == ':q' ] || [ "$tableToUpdate" == ':Q' ]
         then
             echo "You pressed quit."
             tableMenu
@@ -338,23 +337,23 @@ updateTable() {
             # While loop for updating
             while true
             do
-                read -p "$(echo -e "${blue}Which column you want to update by (select by number): [q] to quit: ${reset}")" colToUpdate
-                quit "$colToUpdate"
-
+                read -p "$(echo -e "${blue}Which column you want to update by (select by number): [:q] to quit: ${reset}")" colToUpdate
+                quit "$colToUpdate" "updateTable"
+                
                 # Checking if the colToUpdate num is available
                 if [[ $colToUpdate -gt 0 ]] && [[ $colToUpdate -le $numFields ]]
                 then
                     while true
                     do
-                        read -p "$(echo -e "${blue}Where value: [q] to quit: ${reset}")" val
-                        quit "$val"
+                        read -p "$(echo -e "${blue}Where value: [:q] to quit: ${reset}")" val
+                        quit "$val" "updateTable"
 
                         if $(cut -d: -f"$colToUpdate" "$tableToUpdate" | grep -q "^$val$")
                         then
                             while true
                             do
-                                read -p "$(echo -e "${blue}To be Updated with: [q] to quit: ${reset}")" newVal
-                                quit "$newVal"
+                                read -p "$(echo -e "${blue}To be Updated with: [:q] to quit: ${reset}")" newVal
+                                quit "$newVal" "updateTable"
 
                                 # Checking if colToUpdate is PK
                                 if [[ $colToUpdate -eq $primaryField ]]
@@ -362,12 +361,12 @@ updateTable() {
                                     # Checking if it is null
                                     if [[ -z $newVal ]]
                                     then
-                                        echo -e "${red}Error: Primary field cannot be null. Enter a valid value or 'q' to quit.${reset}"
+                                        echo -e "${red}Error: Primary field cannot be null${reset}"
                                         continue  # Go back to the previous loop
                                     # Checking if the newVal is unique
                                     elif $(cut -d: -f"$colToUpdate" "$tableToUpdate" | grep -q "^$newVal$")
                                     then
-                                        echo -e "${red}Error: '$newVal' already exists, Primary field must be unique. Enter a valid value or 'q' to quit.${reset}"
+                                        echo -e "${red}Error: '$newVal' already exists, Primary field must be unique${reset}"
                                         continue  # Go back to the previous loop
                                     else
                                         break
@@ -397,17 +396,17 @@ updateTable() {
                                 sed -i "s/$val/$newVal/g" "$tableToUpdate"
                                 clear
                                 echo -e "${green}Rows with '${fields[$colToUpdate - 1]}' = '$val' updated successfully${reset}"
-                                clear
-                                updateTableq
+                                
+                                updateTable
                             else
                                 echo -e "${red}Value $val not found in column $colToUpdate${reset}"
                             fi
                         else
-                            echo -e "${red}'$val' is not a valid value in column $colToUpdate, please pick a valid one or 'q' to quit.${reset}"
+                            echo -e "${red}'$val' is not a valid value in column $colToUpdate${reset}"
                         fi
                     done
                 else
-                    echo -e "${red}Please enter an existing column from 1 to $numFields or 'q' to quit.${reset}"
+                    echo -e "${red}Please enter an existing column from 1 to $numFields${reset}"
                 fi
             done
         else
@@ -415,6 +414,7 @@ updateTable() {
         fi
     done
 }
+
 #-------------------------------------------------------------------------------------------
 #-----------------------------------------SELECT TABLE--------------------------------------
 # to select all data from the table
@@ -664,34 +664,36 @@ deleteRow() {
     local table="$1"
     local metadata_file=".$table-metadata"
     local data_file="$table"
-    numFields=$(head -n 1 "$metadata_file" 2>/dev/null)
+    numFields=$(head -n 1 "$metadata_file") 2>/dev/null
     fieldNamesArr=($(awk -F: 'NR==2 {for (i=1; i<=NF; i++) print i"-"$i }' "$metadata_file"))
-    fields=($(sed -n '2p' "$metadata_file" | tr ':' ' ' 2>/dev/null))
+    
 
-    echo -e "\nColumns in table $table:"
-    for ((i = 0; i < ${#fields[@]}; i++)); do
-        echo "$(($i + 1)). ${fields[$i]}"
-    done
-
+    echo -e "Fields in table $table:\n${fieldNamesArr[@]}"
     read -p "$(echo -e "${blue}Which column ([q] to quit): ${reset}")" col
-    quit "$col" "deleteFromTable"
 
-    read -p "$(echo -e "${blue}Enter value ([q] to quit): ${reset}")" val
-    quit "$val" "deleteFromTable"
+    if [[ $col -gt 0 ]] && [[ $col -le $numFields ]]
+    then
+        desiredcol=$(echo "${fieldNamesArr[$col-1]}" | awk -F- '{print $2}')
+        read -p "$(echo -e "${blue}Where value ([q] to quit): ${reset}")" val
+        if $(cut -d: -f"$col" "$table" | grep -q "^$val$")
+        then
+            line_numbers=$(awk -F: -v col="$col" -v val="$val" '$col == val {printf "%sd;", NR}' "$table")
+            line_numbers=${line_numbers%?}  # Remove the trailing semicolon, if any  -> because of last one
 
-    if [[ $col -gt 0 ]] && [[ $col -le $numFields ]]; then
-        if $(cut -d: -f"$col" "$table" | grep -q "^$val$"); then
-            line_numbers=$(awk -F: -v col="$col" -v val="$val" '$col == val {print NR}' "$table" | tr '\n' ';')
-            line_numbers=${line_numbers%?}  
-            sed -i -e "${line_numbers}d" "$table"
-            echo -e "${green}Rows with '${fields[$((col-1))]}' = '$val' deleted successfully${reset}"
+            sed -i "$(echo $line_numbers)" "$table"
+
+                echo -e "${green}Rows with '$desiredcol' = '$val' deleted successfully${reset}"
+                tableMenu
         else
-            echo -e "${red}Value $val not found in column ${fields[$((col-1))]}.${reset}"
+            echo -e "${red}Value $val not found in column $desiredcol${reset}"
+            deleteRow $table
         fi
     else 
-        echo -e "${red}Please enter an existing column number from 1 to $numFields.${reset}"
+        echo -e "${red}Please enter existing column from 1 to $numFields${reset}"
+        deleteRow $table
     fi
-}
+
+    }
 #-------------------------------------------------------------------------------------------
 #-----------------------------------------DROP TABLE--------------------------------------
 dropTable() {
