@@ -1,6 +1,8 @@
 #!/bin/bash
+
 function quit() {
-    if [ "$1" == ':q' ] || [ "$1" == ':Q' ]; then
+    if [ "$1" == ':q' ] || [ "$1" == ':Q' ]
+    then
         clear
         echo -e "${orange}Quitting!${reset}"
         $2  
@@ -10,7 +12,6 @@ function quit() {
 listTables() {
 
     tablesExist=0
-
     echo -e "${blue}\nList of Tables:${reset}"
     echo -e "${blue}------------------------------------${reset}"
 
@@ -27,29 +28,24 @@ listTables() {
     then
         echo -e "${orange}No tables found.${reset}"
     fi
-
     echo -e "${blue}------------------------------------${reset}\n"
 }
 #-------------------------------------------------------------------------------------------
 #-----------------------------------------CREATE TABLE--------------------------------------
 tableRegex='^[a-zA-Z_][a-zA-Z0-9_]*$'
 createTable() {
-    # Ask user for table name
-    echo -e "${yellow}NOTE: (no spaces, cannot begin with a number, no special characters)\n${reset}"
-    #echo -e "${yellow}NOTE: to quit at any point enter ':q'\n${reset}"
 
+    echo -e "${yellow}NOTE: (no spaces, cannot begin with a number, no special characters)\n${reset}"
     read -p "Enter the table name or ':q' to quit: " tableName
     quit "$tableName" "tableMenu"
 
-    # Check if the table name already exists
-    if [ -f "$tableName" ]
+    if [ -f "$tableName" ] #table exists?
     then
         echo -e "\n${red}Error: Table with the name '$tableName' already exists.\n${reset}"
         return
     fi
 
-    # Check regex for table name
-    if [[ ! "$tableName" =~ $tableRegex ]]
+    if [[ ! "$tableName" =~ $tableRegex ]] #table matches regex?
     then
         echo -e "\n${red}Error: Invalid table name. Please follow the specified rules at the beginning.\n${reset}"
         return
@@ -66,31 +62,36 @@ createTable() {
         echo -e "${red}Invalid input. Please enter a valid number greater than 0.${reset}"
     fi
     done
-   
-    # Initialize arrays to store field information
+    # initialize arrays to store field information
     fieldNames=()
     fieldTypes=()
     fieldPrimaryKeys=()
     primaryKeyIsSet=0
 
-    # For each column
-    for ((i = 1; i <= numFields; i++))
+    for ((i = 1; i <= numFields; i++))    # for each column
     do
         echo "------------------------------------"
         echo "Field $i:"
+        while true
+        do
+            read -p "Enter the field name: " fieldName
+            quit "$fieldName" "tableMenu"
 
-        # Ask for field name
-        read -p "Enter the field name: " fieldName
-        quit "$fieldName" "tableMenu"
+            if [[ "${fieldNames[@]}" =~ "$fieldName" ]]
+            then
+                echo -e "${red}Error: Field name '$fieldName' already exists. Please enter a unique field name.${reset}"
+            else
+                fieldNames+=("$fieldName")
+                break
+            fi
+        done
 
-        # Check regex for field name
         if [[ ! "$fieldName" =~ $tableRegex ]]
         then
             echo -e "${red}Error: Invalid field name. Please follow the specified rules.${reset}"
             echo -e "------------------------------------\n"
             return
         fi
-        fieldNames+=("$fieldName")
 
        if [ $primaryKeyIsSet -eq 0 ]   
        then
@@ -160,7 +161,7 @@ createTable() {
                         if [ "$field" = "$primaryField" ]
                         then
                             fieldPrimaryKeys[$index]="primary"
-                            echo "${green}Field '$primaryField' is now set as primary key.${reset}"
+                            echo -e "${green}Field '$primaryField' is now set as primary key.${reset}"
                             break
                         fi
                         index=$((index+1))
@@ -172,16 +173,14 @@ createTable() {
             done
         fi
     ###########################################
-    # Create a file for data
+    # create a file for data
     touch "$tableName"
     chmod -R 777 $tableName
-
-    # Create a metadata file
+    # create a metadata file
     echo  "$numFields" > ".$tableName-metadata" 
     echo "${fieldNames[*]}" | tr ' ' ':' >> ".$tableName-metadata" 
     echo "${fieldTypes[*]}" | tr ' ' ':' >> ".$tableName-metadata"
     echo "${fieldPrimaryKeys[*]}" | tr ' ' ':' >> ".$tableName-metadata"
-
     echo -e "${green}Table $tableName created successfully!${reset}"
     echo "------------------------------------"
 }
@@ -264,7 +263,7 @@ insertIntoTable() {
                             if [[ "$fieldValue" == "$value" ]]
                             then
                                 echo -e "${red}Error: Value for primary field already exists.${reset}"
-                                read -p "Enter value for primary field '${fieldNamesArr[$primaryIndex]}' or ([q] to quit): " fieldValue
+                                read -p "Enter value for primary field '${fieldNamesArr[$primaryIndex]}': " fieldValue
                                 quit "$fieldValue" "tableMenu"
                             
                                 uniqueVal=false    # set uniqueVal to false if the value already exists
@@ -297,26 +296,27 @@ insertIntoTable() {
 #-------------------------------------------------------------------------------------------
 #-----------------------------------------UPDATE TABLE--------------------------------------
 updateTable() {
+    echo -e "${orange}\n___________________ In Update table ___________________${reset}"
     listTables
+    echo -e "${yellow}NOTE: to quit at any point enter ':q'\n${reset}"
 
     while true
     do
-        read -p "$(echo -e "${red}Which table do you want to update? [:q] to quit: ${reset}")" tableToUpdate
+        read -p "$(echo -e "${orange}Which table do you want to update? ${reset}")" tableToUpdate
 
         if [ "$tableToUpdate" == ':q' ] || [ "$tableToUpdate" == ':Q' ]
         then
-            echo "You pressed quit."
+            echo -e "${orange}You pressed quit...Quitting!${reset}"
             tableMenu
         elif [ -f "$tableToUpdate" ] && [ -f ".$tableToUpdate-metadata" ]
         then
-            # Variables initialization
+            # variables initialization
             metadata=".$tableToUpdate-metadata"
             numFields=$(head -n 1 "$metadata" 2>/dev/null)
             fields=($(sed -n '2p' "$metadata" | tr ':' ' ' 2>/dev/null))
             fieldTypesArr=($(sed -n '3p' "$metadata" | tr ':' ' ' 2>/dev/null))
             fieldPrimaryKeysArr=($(sed -n '4p' "$metadata" | tr ':' ' ' 2>/dev/null))
-            echo "${fieldTypesArr[0]}"
-
+            
             for ((i = 0; i < ${#fieldPrimaryKeysArr[@]}; i++))
             do
                 if [[ ${fieldPrimaryKeysArr[$i]} == "primary" ]]
@@ -337,7 +337,7 @@ updateTable() {
             # While loop for updating
             while true
             do
-                read -p "$(echo -e "${blue}Which column you want to update by (select by number): [:q] to quit: ${reset}")" colToUpdate
+                read -p "$(echo -e "${blue}Which column you want to update by (select by number): ${reset}")" colToUpdate
                 quit "$colToUpdate" "updateTable"
                 
                 # Checking if the colToUpdate num is available
@@ -345,14 +345,14 @@ updateTable() {
                 then
                     while true
                     do
-                        read -p "$(echo -e "${blue}Where value: [:q] to quit: ${reset}")" val
+                        read -p "$(echo -e "${blue}Where value: ${reset}")" val
                         quit "$val" "updateTable"
 
                         if $(cut -d: -f"$colToUpdate" "$tableToUpdate" | grep -q "^$val$")
                         then
                             while true
                             do
-                                read -p "$(echo -e "${blue}To be Updated with: [:q] to quit: ${reset}")" newVal
+                                read -p "$(echo -e "${blue}To be Updated with: ${reset}")" newVal
                                 quit "$newVal" "updateTable"
 
                                 # Checking if colToUpdate is PK
@@ -376,22 +376,16 @@ updateTable() {
                                 fi
                             done
 
-                            while true; do
-                                if [[ ${fieldTypesArr[$((colToUpdate - 1))]} == "int" && ! $newVal =~ ^[0-9]+$ ]]
-                                then
-                                    read -p "$(echo -e "${red}Error: Value must be an integer for field '${fields[$((colToUpdate - 1))]}'. Enter a valid value or 'q' to quit: ${reset}")" newVal
-                                    quit "$newVal"
-                                elif [[ ${fieldTypesArr[$((colToUpdate - 1))]} == "string" && ! $newVal =~ ^[^:]+$ ]]
-                                then
-                                    read -p "$(echo -e "${red}Error: Value can't have ':' for field '${fields[$((colToUpdate - 1))]}'.' Enter a valid value or 'q' to quit: ${reset}")" newVal
-                                    quit "$newVal"
-                                else
-                                    break
-                                fi
-                            done
-
+                            if [[ ${fieldTypesArr[$((colToUpdate - 1))]} == "int" && ! $newVal =~ ^[0-9]+$ ]]
+                            then
+                                echo -e "${red}Error: Value must be an integer for field '${fields[$((colToUpdate - 1))]}'.${reset}"
+                                    
+                            elif [[ ${fieldTypesArr[$((colToUpdate - 1))]} == "string" && ! $newVal =~ ^[^:]+$ ]]
+                            then
+                                echo -e "${red}Error: Value can't have ':' for field '${fields[$((colToUpdate - 1))]}'. ${reset}"
+                      
                             # If everything is valid, update the table
-                            if $(cut -d: -f"$colToUpdate" "$tableToUpdate" | grep -q "^$val$")
+                            elif $(cut -d: -f"$colToUpdate" "$tableToUpdate" | grep -q "^$val$")
                             then
                                 sed -i "s/$val/$newVal/g" "$tableToUpdate"
                                 clear
@@ -537,7 +531,6 @@ projection() {
 }
 
 selection() {
-   
     listTables
     echo -e "${orange}Which table do you want to select from? ([:q] to quit) ${reset}"
     read table
@@ -558,20 +551,19 @@ selection() {
     
     fields=($(sed -n '2p' "$metadata" | tr ':' ' '))
 
-    # displays available columns 
+    # Displays available columns 
     echo -e "\nAvailable columns for selection:"
-    for ((i=0; i<${#fields[@]}; i++))
-    do
+    for ((i=0; i<${#fields[@]}; i++)); do
         echo "$(($i+1)). ${fields[$i]}"
     done
 
-     numFields=$(head -n 1 "$metadata") 2>/dev/null
+    numFields=$(head -n 1 "$metadata" 2>/dev/null)
 
-     read -p $'\n\e\033[1;34mWhich column: \e\033[0m' col
- 
-    if [[ $col -gt 0 ]] && [[ $col -le $numFields ]]
+    read -p $'\n\e[1;34mEnter number of column: \e[0m' col
+
+    if [[ $col -gt 0 && $col -le $numFields ]]
     then
-         read -p $'\n\e\033[1;34mWhich value: \e\033[0m' val
+        read -p $'\n\e[1;34mWhich value: \e[0m' val
 
         if $(cut -d: -f"$col" "$table" | grep -q "^$val$")
         then
@@ -583,8 +575,7 @@ selection() {
                 printf "${yellow}%-15s${reset}" "${fields[$i]}"  
             done
             echo -e "${blue}\n************************************************************${reset}"
-            awk -F ':' -v col="$col" -v val="$val" '{ if ($col == val) 
-            { for (i=1; i<=NF; i++) printf "%-15s", $i; printf "\n"} }' "$table"
+            awk -F ':' -v col="$col" -v val="$val" '{ if ($col == val) { for (i=1; i<=NF; i++) printf "%-15s", $i; printf "\n"} }' "$table"
             echo -e "${blue}************************************************************${reset}"
 
         else
@@ -594,6 +585,7 @@ selection() {
         echo -e "${red}Please enter an existing column from 1 to $numFields${reset}"
     fi
 }
+
 # menu to select from
 selectFromTable() {
     PS3="Please select an option: "
@@ -616,9 +608,8 @@ selectFromTable() {
               selectFromTable
             ;;
             4) echo "Exiting select menu..." 
-               tableMenu
-               
-            break ;;
+               tableMenu    
+            ;;
             *) echo -e "${red}Invalid option. Please select a number from 1 to 4.${reset}" ;;
         esac
     done
@@ -626,11 +617,10 @@ selectFromTable() {
 #-------------------------------------------------------------------------------------------
 #-----------------------------------------DELETE FROM TABLE--------------------------------------
 deleteFromTable() {
+    echo -e "${orange}___________________ In Delete from table ___________________${reset}"
     PS3="Enter option: "
-    # List available tables
     listTables
-
-    read -p "$(echo -e "${red}Which table do you want to delete from? [q] to quit: ${reset}")" table
+    read -p "$(echo -e "${orange}Which table do you want to delete from? [:q] to quit: ${reset}")" table
     quit "$table" "tableMenu"
 
     if [ -f "$table" ]; then
@@ -639,7 +629,7 @@ deleteFromTable() {
                 1)
                     echo -n > "$table"
                     clear
-                    echo -e "${green}$table is now empty${reset}"
+                    echo -e "${green}Table $table is now empty!\n${reset}"
                     ;;
                 2)
                     deleteRow "$table"
@@ -666,15 +656,22 @@ deleteRow() {
     local data_file="$table"
     numFields=$(head -n 1 "$metadata_file") 2>/dev/null
     fieldNamesArr=($(awk -F: 'NR==2 {for (i=1; i<=NF; i++) print i"-"$i }' "$metadata_file"))
-    
+    fields=($(sed -n '2p' "$metadata_file" | tr ':' ' ' 2>/dev/null))
 
-    echo -e "Fields in table $table:\n${fieldNamesArr[@]}"
-    read -p "$(echo -e "${blue}Which column ([q] to quit): ${reset}")" col
+    echo -e "\nColumns in table $tableToUpdate:"
+    for ((i = 0; i < ${#fields[@]}; i++))
+    do
+        echo "$(($i + 1)). ${fields[$i]}"
+    done
+    
+    echo -e "${yellow}NOTE: to quit at any point enter ':q'\n${reset}"
+    read -p "$(echo -e "${blue}Enter number of column : ${reset}")" col
+    quit "$col" "deleteFromTable"
 
     if [[ $col -gt 0 ]] && [[ $col -le $numFields ]]
     then
         desiredcol=$(echo "${fieldNamesArr[$col-1]}" | awk -F- '{print $2}')
-        read -p "$(echo -e "${blue}Where value ([q] to quit): ${reset}")" val
+        read -p "$(echo -e "${blue}Where value : ${reset}")" val
         if $(cut -d: -f"$col" "$table" | grep -q "^$val$")
         then
             line_numbers=$(awk -F: -v col="$col" -v val="$val" '$col == val {printf "%sd;", NR}' "$table")
@@ -700,14 +697,11 @@ dropTable() {
     listTables
     while true 
     do
-        echo -e "${red}Which table do you want to drop? [q] to quit: ${reset}"
+        echo -e "${orange}Which table do you want to drop? [:q] to quit: ${reset}"
         read tableToDrop
-
-        if [ "$tableToDrop" = 'q' ] || [ "$tableToDrop" = 'Q' ]; then
-            echo -e "${yellow}You pressed quit.${reset}\n"
-            tableMenu
-            break # Assuming you want to return to the previous menu or exit the function
-        elif [ -f "$tableToDrop" ] && [ -f ".$tableToDrop-metadata" ]
+        quit "$tableToDrop" tableMenu
+     
+        if [ -f "$tableToDrop" ] && [ -f ".$tableToDrop-metadata" ]
         then
             while true
             do
@@ -785,13 +779,11 @@ tableMenu() {
         9) echo -e "${yellow}Exiting see you soon!...${reset}"
            exit 0
         ;; 
-        *) echo -e "${red}Invalid option.. Please enter a choice from 1 to 8${reset}" 
+        *) echo -e "${red}Invalid option.. Please enter a choice from 1 to 9${reset}" 
         ;;
         esac
     done
 }
-
-export -f tableMenu
 
 # calling the menu function
 tableMenu

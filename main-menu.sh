@@ -8,9 +8,9 @@ green='\e[1;32m'
 reset='\e[0m'
 
 main(){
-	PS3="Please enter number of your choice: "
 
-options=("Create Database" "List Database" "Connect to Database" "Drop Database" "Exit Program")
+ PS3="Please enter number of your choice: "
+ options=("Create Database" "List Database" "Connect to Database" "Drop Database" "Exit Program")
 
  echo -e "${blue}------------------------------------${reset}"
  echo -e "${blue}            Main Menu               ${reset}"
@@ -120,13 +120,14 @@ connectDb() {
     listDatabases
     while true
     do
-        read -p "Please enter the name of DB you want to connect: [:q] to quit " connectdb
+        echo -e "${orange}Please enter the name of DB you want to connect or ':q' to quit ${reset}"
+        read connectdb
         quit $connectdb
         
         # check if the database name is empty
         if [ -z "$connectdb" ]
         then
-            echo "Error: Database name cannot be empty."
+            echo -e "${red}Error: Database name cannot be empty.\n${reset}"
 
         # check if the database exists
         elif [ -d "./databases/$connectdb" ]
@@ -143,16 +144,25 @@ connectDb() {
         fi
     done
 }
-function dropDb() {
-    listDatabases
-    read -p "Please enter the name of DB you want to drop: [:q] to quit " dropDb
-    quit $dropDb  
 
-    # Check if the database exists
-    if [ -d "./databases/$dropDb" ]; then
-        while true; do
+dropDb() {
+    listDatabases
+    echo -e "${orange}Please enter the name of DB you want to drop or ':q' to quit ${reset}"
+    read dropDb
+    quit $dropDb  
+    # check if the database name is empty
+    if [ -z "$dropDb" ]
+    then
+        clear
+        echo -e "${red}Error: Database name cannot be empty.\n${reset}"
+        dropDb
+    # check if the database exists
+    elif [ -d "./databases/$dropDb" ]
+    then
+        while true
+        do
             read -p "Are you sure you want to delete $dropDb permanently? [y/N] to quit : " -n 1 yes
-            echo ""  # Ensure newline for readability
+            echo "" 
             case $yes in
                 [yY])
                     rm -r "./databases/$dropDb"
@@ -163,11 +173,9 @@ function dropDb() {
                 [nN])
                     main
                     break  
-                    
                     ;;
                 *)
-                    echo -e "${red}Invalid choice. Please enter 'y' or 'q'.${reset}"
-                    
+                    echo -e "${red}Invalid choice. Please enter 'y' or 'q'.${reset}"    
                     ;;
             esac
         done
@@ -176,43 +184,12 @@ function dropDb() {
         dropDb
     fi
 }
-# function dropDb()
-# {
-#     listDatabases
-#     read -p "Please enter the name of DB you want to drop: [:q] to quit " dropDb
-#     quit $dropDb
-#     #----------------- check if the db is existed--------------------
-#     if [ -d "./databases/$dropDb" ]
-#     then
-#         while true
-#         do
-#             read -p "Are you sure you want to delete $dropDb permanently? [y]/[q] to quit : " -n 1 yes
-#             case $yes in
-#                 [yY])
-#                     rm -r "./databases/$dropDb"
-#                     echo " "
-#                     echo -e "${green}$dropDb is deleted successfully${reset}"
-#                     ./main-menu.sh
-#                     ;;
-#                 [qQ])
-#                     quit $yes
-#                     ;;
-#                 *)
-#                     echo " "
-#                     echo -e "${red}Invalid choice. Please enter 'y' or 'q'.${reset}"
-#                     ;;
-#             esac
-#         done
-        
-
-#     fi
-# }
 
 function quit()
 {
     if [ "$1" == ':q' ] || [ "$1" == ':Q' ]
     then
-        echo "Quitting"
+        echo -e "${orange}Quitting..!${reset}"
         main   
     fi
 }
